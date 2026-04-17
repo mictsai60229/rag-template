@@ -1,0 +1,4 @@
+langgraph>=0.2.0,<2.0.0
+langchain-core>=0.3.0,<2.0.0
+langgraph-checkpoint-sqlite>=2.0.0,<3.0.0
+rich>=13.7.0,<16.0.0
