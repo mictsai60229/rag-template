@@ -58,14 +58,37 @@ Read these files in order:
 1. **`docs/prd.md`** — understand what is being built and why.
 2. **`docs/sad.md`** — understand how systems are designed, their boundaries, and architectural decisions.
 3. **`systems/<system_name>/CLAUDE.md`** — understand this system's tech stack, conventions, run/test commands, and directory layout. (Skip for init-plans; that file does not exist yet.)
-4. **Your assigned plan file** — understand the exact scope, phases, tasks, and done criteria for this session. Generate a github branch according to the plan file name.
+4. **Your assigned plan file** — understand the exact scope, phases, tasks, and done criteria for this session.
 5. **Sibling plans with the same system prefix** — if your plan is `docs/plans/backend-plan-2.md`, also read `docs/plans/backend-plan-1.md` to understand what was already built. Use Glob pattern `docs/plans/{system}-plan*.md` to find all sibling files.
 
 Do not write a single line of code until you have read all four of the above.
 
 ---
 
-## Step 2 — Survey the Existing Codebase
+## Step 2 — Create Feature Branch
+
+Derive the branch name from the plan filename:
+- Strip the `plans/` prefix and `.md` suffix.
+- Prepend `feat/`.
+- Example: `plans/import-init-plan.md` → `feat/import-init-plan`
+
+Create and check out the branch before writing any code:
+
+```bash
+git checkout -b feat/{plan-stem}
+```
+
+If the branch already exists (e.g., resuming after an interruption), check it out instead:
+
+```bash
+git checkout feat/{plan-stem}
+```
+
+All commits in this session go onto this feature branch. Never commit directly to `main`.
+
+---
+
+## Step 3 — Survey the Existing Codebase
 
 Before implementing:
 
@@ -76,7 +99,7 @@ Before implementing:
 
 ---
 
-## Step 3 — Implement Phase by Phase
+## Step 4 — Implement Phase by Phase
 
 Work through each phase in the plan in order. For each phase:
 

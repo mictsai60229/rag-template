@@ -183,21 +183,15 @@ Proceed directly to Step 7.
    git commit -m "review: add review report for {plan filename}"
    ```
 
-2. Push the branch to GitHub:
-   ```bash
-   git push origin HEAD
-   ```
-
-   If the branch has no upstream yet:
+2. Push the feature branch to GitHub:
    ```bash
    git push -u origin HEAD
    ```
 
-3. Optionally, if the `gh` CLI is available and this is a feature branch, create a pull request:
+3. Create a pull request into `main`:
    ```bash
-   gh pr create --title "{system}: implement {phase scope}" --body "$(cat {PLAN_FILE_PATH}.review.md)"
+   gh pr create --title "{system}: implement {phase scope}" --base main --body "$(cat {PLAN_FILE_PATH}.review.md)"
    ```
-   Only do this if you are on a non-main branch.
 
 ---
 
@@ -213,8 +207,8 @@ Review file: {PLAN_FILE_PATH}.review.md
 Decision: [PUSH | FIX_NEEDED]
 Fix session: [spawned | not needed]
 Tests: [PASS | FAIL]
-Pushed: [yes — branch HEAD | no — reason]
-PR: [URL if created | not created]
+Pushed: [yes — {branch name} | no — reason]
+PR: [URL | not created — reason]
 ```
 
 ---

@@ -279,6 +279,52 @@ How to confirm this system plan has been successfully implemented end-to-end:
 
 ---
 
+### Step 5 — Create `plans/execution-order.md`
+
+After all plan files are written, analyse their `## Prerequisites` sections to derive a dependency graph. Write `plans/execution-order.md` that tells a developer (or orchestrator) the exact order to run the plans, and which can run in parallel.
+
+**Rules for building the graph:**
+- A plan with no prerequisites (or only `docs/prd.md` / `docs/sad.md` as prerequisites) has no plan-level dependency and can start immediately.
+- A plan whose prerequisites include another plan file must be placed after that plan.
+- Plans with no mutual dependency and whose prerequisites are all satisfied may be placed in the same parallel group.
+
+**Template:**
+
+```markdown
+# Plan Execution Order
+
+## Dependency Graph
+
+| Plan | Depends On |
+|------|-----------|
+| plans/foo-init-plan.md | none |
+| plans/bar-init-plan.md | none |
+| plans/baz-init-plan.md | plans/foo-init-plan.md, plans/bar-init-plan.md |
+| plans/foo-plan-1.md | plans/foo-init-plan.md |
+| plans/foo-plan-2.md | plans/foo-plan-1.md |
+
+## Execution Schedule
+
+### Wave 1 — run in parallel
+- `plans/foo-init-plan.md`
+- `plans/bar-init-plan.md`
+
+### Wave 2 — run after Wave 1 completes
+- `plans/baz-init-plan.md`
+- `plans/foo-plan-1.md`
+
+### Wave 3 — run after Wave 2 completes
+- `plans/foo-plan-2.md`
+
+## Notes
+- Each wave's plans may be handed to coding-agents simultaneously.
+- A plan must not start until every plan it depends on has been reviewed and merged.
+```
+
+Fill in the table and waves from the actual plans created in Step 4. Do not leave placeholder names.
+
+---
+
 ## Output File Summary
 
 | File | Condition |
@@ -289,6 +335,7 @@ How to confirm this system plan has been successfully implemented end-to-end:
 | `docs/{system}-init-plan.md` | When `systems/<system_name>/CLAUDE.md` is missing or empty |
 | `docs/{system}-plan.md` | One per system whose CLAUDE.md already exists, when it fits in one file |
 | `docs/{system}-plan-1.md`, `-2.md`, ... | When that system's plan is too large to fit in one file |
+| `plans/execution-order.md` | Always — created in Step 5 after all plans are written |
 
 ---
 
