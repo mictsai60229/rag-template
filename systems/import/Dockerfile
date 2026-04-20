@@ -7,7 +7,7 @@ WORKDIR /app
 COPY pyproject.toml ./
 
 # Install runtime dependencies only (no dev extras in the image)
-RUN pip install --no-cache-dir -e ".[dev]" || pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir -e .
 
 # Copy the source package and CLI entry point
 COPY src/ ./src/

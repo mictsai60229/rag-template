@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     )
 
     # --- Embedding provider ---
-    openai_api_key: str = ""
+    openai_api_key: str | None = None  # Required when embedding_provider="openai"
     embedding_provider: str = "openai"
     embedding_model: str = "text-embedding-3-small"
     embedding_batch_size: int = 32
