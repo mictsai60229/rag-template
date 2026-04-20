@@ -93,10 +93,8 @@ class OpenAIEmbedder(Embedder):
         results: list[list[float]] = []
         client = self._openai.OpenAI(api_key=self._api_key)
 
-        for batch_start in range(0, max(len(texts), 1), self._batch_size):
+        for batch_start in range(0, len(texts), self._batch_size):
             batch = texts[batch_start : batch_start + self._batch_size]
-            if not batch:
-                continue
             for attempt in range(self._MAX_RETRIES):
                 try:
                     response = client.embeddings.create(input=batch, model=self._model)

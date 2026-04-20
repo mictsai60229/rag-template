@@ -64,8 +64,11 @@ class QueryService:
         """
         start = time.monotonic()
 
-        retrieval_mode: str = request.retrieval_mode or self._config.RETRIEVAL_MODE
-        top_k: int = request.top_k or self._config.TOP_K
+        retrieval_mode: str = (
+            request.retrieval_mode if request.retrieval_mode is not None
+            else self._config.RETRIEVAL_MODE
+        )
+        top_k: int = request.top_k if request.top_k is not None else self._config.TOP_K
 
         query_vector = self._embedder.embed_text(request.query)
         chunks = self._opensearch.search(
