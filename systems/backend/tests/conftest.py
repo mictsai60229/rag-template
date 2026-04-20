@@ -7,7 +7,8 @@ because ``Config`` is not loaded at import time — only when a route handler
 actually calls ``get_config()``.
 """
 
-import pytest
+from collections.abc import AsyncGenerator
+
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
@@ -15,7 +16,7 @@ from src.main import app
 
 
 @pytest_asyncio.fixture
-async def client() -> AsyncClient:  # type: ignore[misc]
+async def client() -> AsyncGenerator[AsyncClient, None]:
     """Return an ``AsyncClient`` wired to the FastAPI test app."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
