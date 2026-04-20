@@ -20,6 +20,35 @@ You are a senior software engineer. In this session you are responsible for impl
 
 The plan file to implement is provided in the invocation prompt. If no specific plan file was given, look for the single plan file in `docs/plans/` that has no predecessor (i.e., its `## Prerequisites` section lists no other plan files as dependencies). If ambiguous, stop and ask.
 
+### CLAUDE.md Guard (run before anything else)
+
+1. Extract the **system name** from the plan filename:
+   - Strip the `docs/plans/` prefix and `.md` suffix.
+   - Remove the trailing `-plan`, `-plan-N`, `-init-plan`, or `-init-plan-N` suffix.
+   - The remainder is the system name (e.g., `backend-plan-2.md` → `backend`).
+
+2. Determine whether this is an **init-plan**: the filename contains `-init-plan`.
+
+3. **If this is NOT an init-plan:**
+   - Attempt to read `systems/<system_name>/CLAUDE.md`.
+   - If the file does not exist or contains no non-whitespace content: **STOP immediately.** Do not read any other files or write any code. Output:
+
+     ```
+     BLOCKED — missing system CLAUDE.md
+
+     The plan `{PLAN_FILE_PATH}` cannot be executed because
+     `systems/<system_name>/CLAUDE.md` does not exist or is empty.
+
+     Run the init-plan first:
+       docs/plans/{system_name}-init-plan.md
+
+     Once the init-plan is complete and CLAUDE.md is populated, re-invoke this plan.
+     ```
+
+4. **If this IS an init-plan:** proceed normally — creating the CLAUDE.md is this plan's job.
+
+5. **If CLAUDE.md exists and has content:** proceed normally. Read it as part of Step 1.
+
 ---
 
 ## Step 1 — Read All Context Before Writing Any Code
@@ -28,8 +57,9 @@ Read these files in order:
 
 1. **`docs/prd.md`** — understand what is being built and why.
 2. **`docs/sad.md`** — understand how systems are designed, their boundaries, and architectural decisions.
-3. **Your assigned plan file** — understand the exact scope, phases, tasks, and done criteria for this session. Geneerate github branch according to the plan file name
-4. **Sibling plans with the same system prefix** — if your plan is `docs/plans/backend-plan-2.md`, also read `docs/plans/backend-plan-1.md` to understand what was already built. Use Glob pattern `docs/plans/{system}-plan*.md` to find all sibling files.
+3. **`systems/<system_name>/CLAUDE.md`** — understand this system's tech stack, conventions, run/test commands, and directory layout. (Skip for init-plans; that file does not exist yet.)
+4. **Your assigned plan file** — understand the exact scope, phases, tasks, and done criteria for this session. Generate a github branch according to the plan file name.
+5. **Sibling plans with the same system prefix** — if your plan is `docs/plans/backend-plan-2.md`, also read `docs/plans/backend-plan-1.md` to understand what was already built. Use Glob pattern `docs/plans/{system}-plan*.md` to find all sibling files.
 
 Do not write a single line of code until you have read all four of the above.
 
@@ -134,6 +164,7 @@ Deviations from the plan, decisions made, or items relevant to the next plan in 
 
 ## Rules
 - This session implements exactly one plan file. Do not pick up additional plan files.
+- **Never execute a non-init-plan when `systems/<system_name>/CLAUDE.md` is missing or empty.** Stop and report the blocker as described in Step 0.
 - Never modify `docs/prd.md`, `docs/sad.md`, or any file in `docs/plans/`. Read them only.
 - Sibling plans with the same system prefix may be read for context. Do not re-implement what they already built.
 - Never proceed to the next phase until the current phase's tests pass and done criteria are met.
