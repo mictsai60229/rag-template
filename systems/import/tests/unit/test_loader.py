@@ -130,6 +130,36 @@ class TestLoadPdf:
         assert docs[0].source == "/fake/path.pdf"
 
 
+class TestLoadDocx:
+    def test_returns_one_raw_document(self) -> None:
+        mock_para1 = MagicMock()
+        mock_para1.text = "First paragraph."
+        mock_para2 = MagicMock()
+        mock_para2.text = "Second paragraph."
+
+        mock_document = MagicMock()
+        mock_document.paragraphs = [mock_para1, mock_para2]
+
+        with patch("docx.Document", return_value=mock_document):
+            loader = DocumentLoader()
+            docs = loader._load_docx("/fake/doc.docx")
+
+        assert len(docs) == 1
+        assert docs[0].doc_type == "docx"
+        assert "First paragraph." in docs[0].content
+        assert "Second paragraph." in docs[0].content
+
+    def test_source_set_to_path(self) -> None:
+        mock_document = MagicMock()
+        mock_document.paragraphs = []
+
+        with patch("docx.Document", return_value=mock_document):
+            loader = DocumentLoader()
+            docs = loader._load_docx("/fake/doc.docx")
+
+        assert docs[0].source == "/fake/doc.docx"
+
+
 class TestLoadDirectory:
     def test_returns_documents_from_multiple_txt_files(self, tmp_path: Path) -> None:
         (tmp_path / "a.txt").write_text("Content of file A.", encoding="utf-8")
@@ -169,3 +199,24 @@ class TestLoadDirectory:
         doc_types = {d.doc_type for d in docs}
         assert "txt" in doc_types
         assert "md" in doc_types
+
+    def test_logs_warning_on_failed_file_load(
+        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Files that raise during loading are skipped with a warning."""
+        txt_file = tmp_path / "file.txt"
+        txt_file.write_text("OK.", encoding="utf-8")
+        bad_file = tmp_path / "bad.pdf"
+        bad_file.write_bytes(b"not a real pdf")
+
+        loader = DocumentLoader()
+        import logging
+
+        with caplog.at_level(logging.WARNING, logger="src.loader"):
+            with patch("pymupdf.open", side_effect=RuntimeError("bad pdf")):
+                docs = loader._load_directory(str(tmp_path))
+
+        # TXT should be loaded; PDF should be skipped with a warning.
+        assert len(docs) == 1
+        assert docs[0].doc_type == "txt"
+        assert any("bad.pdf" in msg or "Failed" in msg for msg in caplog.messages)
