@@ -178,7 +178,6 @@ class SemanticStrategy(ChunkingStrategy):
     def __init__(self, embedder: object) -> None:
         try:
             from langchain_experimental.text_splitter import SemanticChunker  # noqa: PLC0415
-            from langchain_core.embeddings import Embeddings  # noqa: PLC0415
 
             self._chunker = SemanticChunker(embeddings=embedder)  # type: ignore[arg-type]
         except Exception as exc:
