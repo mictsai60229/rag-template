@@ -124,3 +124,47 @@ Bash execution is not available in this environment. The following is a static a
 **PUSH**
 
 All done criteria are met. The four direct fixes are minimal and correct. No findings require a coding-agent session. The flagged items are either expected scaffolding gaps (backend Dockerfile not yet existing), future-plan improvements (CI caching, integration test separation), or a one-time manual git cleanup (`git rm --cached` for the lock files).
+
+---
+
+## Addendum — commit 8068939 (agent file updates)
+
+### Commit
+`8068939 feat: update agents — feature branches, PR creation, execution order plan`
+
+### Files Reviewed
+- `.claude/agents/coding-agent.md`
+- `.claude/agents/project-planner.md`
+- `.claude/agents/reviewer-agent.md`
+
+### Changes in This Commit
+
+**coding-agent.md**
+- Removed the inline "Generate a github branch" instruction that was buried in Step 1 bullet 4 (correct: branching belongs in its own step).
+- Added Step 2 "Create Feature Branch" with explicit `git checkout -b feat/{plan-stem}` / `git checkout feat/{plan-stem}` instructions and a resume-after-interruption branch.
+- Renumbered the former Step 2 (Survey) and Step 3 (Implement) to Step 3 and Step 4 accordingly. Numbering is consistent end-to-end.
+
+**project-planner.md**
+- Added Step 5 "Create `plans/execution-order.md`" with a dependency-graph template and parallel-wave schedule template.
+- Added `plans/execution-order.md` row to the Output File Summary table.
+- Step numbering is correct within the workflow section.
+
+**reviewer-agent.md**
+- Made `git push -u origin HEAD` unconditional (removed the conditional two-form push that branched on whether upstream existed; `-u` is always correct for a new feature branch).
+- Made `gh pr create --base main` mandatory instead of optional, and added the `--base main` flag explicitly.
+- Updated Final Output template: `Pushed` now shows `{branch name}` instead of `HEAD`; `PR` shows `not created — reason` instead of `not created`.
+
+### Changes Applied (this addendum)
+None — the agent changes are clean and require no edits.
+
+### Findings (Flagged, No Change)
+
+- **`project-planner.md` Output File Summary and Rules contain stale `docs/` path references.** Rows such as `docs/{system}-init-plan.md` and the rule "Always write to `docs/`" contradict the actual practice in this repo (plans live in `plans/`). These are pre-existing inconsistencies not introduced by commit 8068939 and are therefore out of scope for this review pass. A future planner update should normalise all references to `plans/`.
+
+- **`coding-agent.md` Rules line references `docs/plans/` ("Never modify `docs/prd.md`, `docs/sad.md`, or any file in `docs/plans/`").** This is also a stale path; plans live in `plans/`. Pre-existing, flagged only.
+
+### Test Result
+Agent files are configuration/prompt documents; no automated test suite applies. Static analysis: all three files are syntactically valid Markdown with correct YAML front-matter. Step numbering in coding-agent.md (0, 1, 2, 3, 4, 5) is internally consistent after the insertion.
+
+### Addendum Decision
+**PUSH** — no issues requiring a fix session.
