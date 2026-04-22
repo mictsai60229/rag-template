@@ -36,6 +36,9 @@ include = ["src*"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+    "integration: marks tests that require Docker and a running OpenSearch container",
+]
 
 [tool.ruff]
 line-length = 100
