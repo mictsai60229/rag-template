@@ -30,11 +30,19 @@ class Settings(BaseSettings):
     opensearch_host: str = "localhost"
     opensearch_port: int = 9200
     opensearch_index: str = "rag-chunks"
+    opensearch_username: str | None = None
+    opensearch_password: str | None = None
 
     # --- Chunking ---
     chunking_strategy: str = "recursive"
     chunk_size: int = 512
     chunk_overlap: int = 64
+
+    # --- Indexing ---
+    embedding_dimension: int = 1536
+
+    # --- Logging ---
+    log_level: str = "INFO"
 
     # --- Environment ---
     env: str = "dev"
