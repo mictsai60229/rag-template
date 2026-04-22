@@ -70,8 +70,9 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         start = time.monotonic()
         try:
             response: Response = await call_next(request)  # type: ignore[operator]
-        finally:
+        except Exception:
             _request_id_ctx_var.reset(token)
+            raise
 
         latency_ms = int((time.monotonic() - start) * 1000)
         response.headers["X-Request-ID"] = request_id
@@ -87,6 +88,7 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
             },
         )
 
+        _request_id_ctx_var.reset(token)
         return response
 
 

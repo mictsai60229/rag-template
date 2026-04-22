@@ -59,7 +59,7 @@ async def test_query_latency_ms_positive(integration_client: AsyncClient) -> Non
         "/query", json={"query": "What is Python?"}
     )
     assert response.status_code == 200
-    assert response.json()["latency_ms"] >= 0
+    assert response.json()["latency_ms"] > 0
 
 
 @pytest.mark.asyncio
