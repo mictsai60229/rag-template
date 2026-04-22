@@ -13,6 +13,7 @@ Secret fields excluded from the response:
 from fastapi import APIRouter, Depends
 
 from src.config import Config, get_config
+from src.middleware.auth import require_api_key
 
 router = APIRouter()
 
@@ -40,6 +41,7 @@ def _is_secret_field(field_name: str) -> bool:
 @router.get("/config", response_model=dict[str, object])
 async def config_endpoint(
     config: Config = Depends(get_config),
+    _: None = Depends(require_api_key),
 ) -> dict[str, object]:
     """Return active (non-secret) configuration values.
 

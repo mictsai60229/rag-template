@@ -10,6 +10,7 @@ import asyncio
 from fastapi import APIRouter, Depends
 
 from src.dependencies.query import get_query_service
+from src.middleware.auth import require_api_key
 from src.schemas.query import QueryRequest, QueryResponse
 from src.services.query_service import QueryService
 
@@ -20,6 +21,7 @@ router = APIRouter()
 async def query_endpoint(
     request: QueryRequest,
     service: QueryService = Depends(get_query_service),
+    _: None = Depends(require_api_key),
 ) -> QueryResponse:
     """Accept a natural-language query and return a grounded answer.
 

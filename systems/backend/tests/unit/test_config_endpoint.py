@@ -30,7 +30,7 @@ def _make_test_config(**overrides: object) -> Config:
 @pytest.mark.asyncio
 async def test_openai_api_key_is_absent_from_response() -> None:
     """OPENAI_API_KEY must never appear in the /config response."""
-    test_cfg = _make_test_config()
+    test_cfg = _make_test_config(ENV="dev")
     app.dependency_overrides[get_config] = lambda: test_cfg
     try:
         async with AsyncClient(
@@ -46,7 +46,7 @@ async def test_openai_api_key_is_absent_from_response() -> None:
 @pytest.mark.asyncio
 async def test_api_key_is_absent_from_response() -> None:
     """API_KEY must never appear in the /config response."""
-    test_cfg = _make_test_config()
+    test_cfg = _make_test_config(ENV="dev")
     app.dependency_overrides[get_config] = lambda: test_cfg
     try:
         async with AsyncClient(
@@ -62,7 +62,7 @@ async def test_api_key_is_absent_from_response() -> None:
 @pytest.mark.asyncio
 async def test_non_secret_fields_are_present() -> None:
     """Non-secret fields such as OPENSEARCH_HOST and RETRIEVAL_MODE are present."""
-    test_cfg = _make_test_config()
+    test_cfg = _make_test_config(ENV="dev")
     app.dependency_overrides[get_config] = lambda: test_cfg
     try:
         async with AsyncClient(
@@ -126,7 +126,7 @@ async def test_fields_with_password_in_name_are_redacted() -> None:
 @pytest.mark.asyncio
 async def test_opensearch_port_present_and_correct_type() -> None:
     """Numeric config fields are returned with their correct type."""
-    test_cfg = _make_test_config()
+    test_cfg = _make_test_config(ENV="dev")
     app.dependency_overrides[get_config] = lambda: test_cfg
     try:
         async with AsyncClient(
@@ -136,5 +136,20 @@ async def test_opensearch_port_present_and_correct_type() -> None:
         body = response.json()
         assert "OPENSEARCH_PORT" in body
         assert isinstance(body["OPENSEARCH_PORT"], int)
+    finally:
+        app.dependency_overrides.pop(get_config, None)
+
+
+@pytest.mark.asyncio
+async def test_production_missing_api_key_returns_401() -> None:
+    """GET /config in ENV=production without X-API-Key returns 401."""
+    test_cfg = _make_test_config(ENV="production", API_KEY="real-secret")
+    app.dependency_overrides[get_config] = lambda: test_cfg
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            response = await client.get("/config")
+        assert response.status_code == 401
     finally:
         app.dependency_overrides.pop(get_config, None)
