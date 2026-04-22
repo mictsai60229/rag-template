@@ -6,13 +6,12 @@ subsequent plans.
 
 from fastapi import APIRouter
 
-from src.api import health
+from src.api import health, query
 
 router = APIRouter()
 
-# Health check (implemented in Phase 1)
+# Health check
 router.include_router(health.router)
 
-# POST /query sub-router — planned (backend-plan-1)
-# from src.api import query
-# router.include_router(query.router)
+# POST /query
+router.include_router(query.router)
