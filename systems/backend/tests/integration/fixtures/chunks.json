@@ -1,0 +1,52 @@
+[
+  {
+    "chunk_id": "chunk-001",
+    "doc_id": "doc-001",
+    "content": "Python is a high-level, general-purpose programming language. Its design philosophy emphasises code readability using indentation.",
+    "source": "python_intro.txt",
+    "doc_type": "txt",
+    "page_number": null,
+    "chunk_index": 0,
+    "ingested_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "chunk_id": "chunk-002",
+    "doc_id": "doc-001",
+    "content": "Python supports multiple programming paradigms including structured, object-oriented, and functional programming.",
+    "source": "python_intro.txt",
+    "doc_type": "txt",
+    "page_number": null,
+    "chunk_index": 1,
+    "ingested_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "chunk_id": "chunk-003",
+    "doc_id": "doc-002",
+    "content": "Guido van Rossum began working on Python in the late 1980s as a successor to the ABC programming language.",
+    "source": "python_history.md",
+    "doc_type": "md",
+    "page_number": null,
+    "chunk_index": 0,
+    "ingested_at": "2024-01-02T00:00:00Z"
+  },
+  {
+    "chunk_id": "chunk-004",
+    "doc_id": "doc-002",
+    "content": "Python 3.0 was released in 2008 and introduced breaking changes that were not backward-compatible with Python 2.",
+    "source": "python_history.md",
+    "doc_type": "md",
+    "page_number": null,
+    "chunk_index": 1,
+    "ingested_at": "2024-01-02T00:00:00Z"
+  },
+  {
+    "chunk_id": "chunk-005",
+    "doc_id": "doc-003",
+    "content": "The Python Package Index (PyPI) hosts thousands of third-party packages that extend the Python standard library.",
+    "source": "python_ecosystem.txt",
+    "doc_type": "txt",
+    "page_number": null,
+    "chunk_index": 0,
+    "ingested_at": "2024-01-03T00:00:00Z"
+  }
+]
