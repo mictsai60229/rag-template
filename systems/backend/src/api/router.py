@@ -6,7 +6,7 @@ subsequent plans.
 
 from fastapi import APIRouter
 
-from src.api import health, query
+from src.api import config_endpoint, health, query
 
 router = APIRouter()
 
@@ -15,3 +15,6 @@ router.include_router(health.router)
 
 # POST /query
 router.include_router(query.router)
+
+# GET /config
+router.include_router(config_endpoint.router)
