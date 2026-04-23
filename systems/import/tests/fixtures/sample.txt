@@ -1,0 +1,2 @@
+This is a sample text document for testing the RAG import pipeline.
+It contains two sentences to exercise the text loader.

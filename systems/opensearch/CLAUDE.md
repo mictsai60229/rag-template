@@ -22,10 +22,15 @@ In development OpenSearch runs as a single-node Docker container (security plugi
 systems/opensearch/
 ├── CLAUDE.md
 ├── docker-compose.yml              # Single-node dev cluster
+├── pytest.ini                      # pytest marker registration
+├── requirements.txt                # Test dependencies (opensearch-py, pytest)
 ├── mappings/
 │   └── rag_index.json              # Reference index mapping (source of truth for indexer.py)
 └── tests/
-    └── test_opensearch_health.py   # Cluster health smoke test (pytest)
+    ├── __init__.py
+    ├── test_opensearch_health.py   # Cluster health smoke test
+    ├── test_index_lifecycle.py     # Index create/delete and knn_vector dimension tests
+    └── test_search_modes.py        # BM25, k-NN, and metadata-filter search tests
 ```
 
 ---
@@ -114,3 +119,17 @@ All `ChunkDocument` fields listed below must exactly match the SAD Data Models s
 | `page_number` | `integer` | Filterable; nullable |
 | `chunk_index` | `integer` | Filterable; zero-based position in parent doc |
 | `ingested_at` | `date` | Filterable; UTC timestamp of ingestion |
+
+### Production Checklist
+
+Before deploying OpenSearch to a production environment, verify these settings:
+
+- [ ] Run a minimum 3-node cluster (or use AWS OpenSearch Service).
+- [ ] Re-enable the security plugin (`plugins.security.disabled=false`) and configure TLS certificates for node-to-node and client-to-node traffic.
+- [ ] Change `number_of_replicas` to at least 1 for each primary shard (already set in the reference mapping; ensure this is not overridden at cluster level).
+- [ ] Tune `number_of_shards` before creating the production index — this cannot be changed on a live index.
+- [ ] Bind OpenSearch to the internal network only (not 0.0.0.0); update port binding in the production Docker Compose or K8s service to exclude external exposure.
+- [ ] Set `OPENSEARCH_JAVA_OPTS` to at least half the available RAM (e.g., `-Xms4g -Xmx4g` for an 8 GB node).
+- [ ] Enable disk watermark monitoring and set appropriate low/high/flood_stage thresholds.
+- [ ] Snapshot lifecycle policy: configure automatic daily snapshots to S3 or GCS.
+- [ ] Monitor cluster health via `GET /_cluster/health` and alert if status drops to `red`.

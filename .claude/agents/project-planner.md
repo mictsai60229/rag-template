@@ -329,12 +329,12 @@ Fill in the table and waves from the actual plans created in Step 4. Do not leav
 
 | File | Condition |
 |------|-----------|
-| `docs/init-plan.md` | Only if root CLAUDE.md was empty or missing |
+| `plans/init-plan.md` | Only if root CLAUDE.md was empty or missing |
 | `docs/prd.md` | Always (written by `project-manager` agent) |
 | `docs/sad.md` | Always (written by `system-architecture` agent) |
-| `docs/{system}-init-plan.md` | When `systems/<system_name>/CLAUDE.md` is missing or empty |
-| `docs/{system}-plan.md` | One per system whose CLAUDE.md already exists, when it fits in one file |
-| `docs/{system}-plan-1.md`, `-2.md`, ... | When that system's plan is too large to fit in one file |
+| `plans/{system}-init-plan.md` | When `systems/<system_name>/CLAUDE.md` is missing or empty |
+| `plans/{system}-plan.md` | One per system whose CLAUDE.md already exists, when it fits in one file |
+| `plans/{system}-plan-1.md`, `-2.md`, ... | When that system's plan is too large to fit in one file |
 | `plans/execution-order.md` | Always — created in Step 5 after all plans are written |
 
 ---
