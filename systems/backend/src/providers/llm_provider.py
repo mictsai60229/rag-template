@@ -11,6 +11,8 @@ Usage::
 
 from abc import ABC, abstractmethod
 
+from langchain_core.prompts import ChatPromptTemplate
+
 from src.exceptions.domain import ExternalServiceError
 from src.models import Chunk
 
@@ -61,8 +63,6 @@ class OpenAIChatProvider(LLMProvider):
         self._api_key = api_key
         self._model = model
 
-        from langchain_core.prompts import ChatPromptTemplate
-
         self._prompt_template = ChatPromptTemplate.from_messages(
             [
                 ("system", self._SYSTEM_MESSAGE),
@@ -86,9 +86,12 @@ class OpenAIChatProvider(LLMProvider):
         context = self._format_context(chunks)
         messages = self._prompt_template.format_messages(context=context, question=query)
 
-        # Convert LangChain message objects to the dict format expected by openai SDK
-        openai_messages = [{"role": m.type if m.type != "human" else "user", "content": m.content}
-                           for m in messages]
+        # Convert LangChain message objects to the dict format expected by openai SDK.
+        # LangChain uses "human" for user turns; OpenAI expects "user".
+        _role_map = {"human": "user", "ai": "assistant"}
+        openai_messages = [
+            {"role": _role_map.get(m.type, m.type), "content": m.content} for m in messages
+        ]
 
         try:
             client = self._openai.OpenAI(api_key=self._api_key)
