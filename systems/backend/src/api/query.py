@@ -20,7 +20,6 @@ router = APIRouter()
 @router.post("/query", response_model=QueryResponse)
 async def query_endpoint(
     request: QueryRequest,
-    service: QueryService = Depends(get_query_service),
     _: None = Depends(require_api_key),
 ) -> QueryResponse:
     """Accept a natural-language query and return a grounded answer.
@@ -37,4 +36,7 @@ async def query_endpoint(
         A ``QueryResponse`` containing the answer, source chunks, retrieval mode,
         and end-to-end latency in milliseconds.
     """
-    return await asyncio.to_thread(service.query, request)
+
+    query_service = get_query_service()
+
+    return await query_service.query(request)

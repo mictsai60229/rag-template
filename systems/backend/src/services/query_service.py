@@ -5,7 +5,7 @@ HTTP concerns; it only raises ``AppError`` subclasses on failure.
 
 Usage::
 
-    service = QueryService(embedder=..., opensearch=..., llm=..., config=...)
+    service = QueryService(embedder=..., opensearch=..., config=...)
     response = service.query(QueryRequest(query="What is Python?"))
 """
 
@@ -13,7 +13,6 @@ import time
 
 from src.config import Config
 from src.providers.embedder import Embedder
-from src.providers.llm_provider import LLMProvider
 from src.providers.opensearch_provider import OpenSearchProvider
 from src.schemas.query import QueryRequest, QueryResponse, SourceRef
 
@@ -29,7 +28,6 @@ class QueryService:
         self,
         embedder: Embedder,
         opensearch: OpenSearchProvider,
-        llm: LLMProvider,
         config: Config,
     ) -> None:
         """Initialise the query service with injected dependencies.
@@ -37,15 +35,13 @@ class QueryService:
         Args:
             embedder: Provider for embedding the incoming query.
             opensearch: Provider for searching the OpenSearch index.
-            llm: Provider for generating the final answer.
             config: Application configuration (used to resolve defaults).
         """
         self._embedder = embedder
         self._opensearch = opensearch
-        self._llm = llm
         self._config = config
 
-    def query(self, request: QueryRequest) -> QueryResponse:
+    async def query(self, request: QueryRequest) -> QueryResponse:
         """Execute the full RAG pipeline for a single query.
 
         Steps:
@@ -53,8 +49,7 @@ class QueryService:
             2. Resolve ``retrieval_mode`` and ``top_k`` (request overrides config).
             3. Embed the query text.
             4. Retrieve matching chunks from OpenSearch.
-            5. Generate an answer from the LLM.
-            6. Compute latency and build the response.
+            5. Compute latency and build the response.
 
         Args:
             request: Validated query request from the caller.
@@ -78,7 +73,6 @@ class QueryService:
             filters=request.filters,
             k=top_k,
         )
-        answer = self._llm.generate(query=request.query, chunks=chunks)
 
         latency_ms = int((time.monotonic() - start) * 1000)
 
@@ -93,7 +87,6 @@ class QueryService:
         ]
 
         return QueryResponse(
-            answer=answer,
             sources=sources,
             retrieval_mode=retrieval_mode,
             latency_ms=latency_ms,

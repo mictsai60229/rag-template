@@ -28,20 +28,14 @@ class Config(BaseSettings):
         extra="ignore",
     )
 
-    # --- OpenAI (used by both OpenAI embedder and OpenAI LLM provider) ---
-    OPENAI_API_KEY: str  # required — crashes at startup if missing
-
     # --- OpenSearch ---
     OPENSEARCH_HOST: str  # required
     OPENSEARCH_PORT: int  # required
     OPENSEARCH_INDEX: str  # required
 
     # --- Embedding ---
-    EMBEDDING_PROVIDER: str  # required; "openai" | "huggingface"
-    EMBEDDING_MODEL: str  # required; e.g. "text-embedding-3-small"
-
-    # --- LLM ---
-    LLM_MODEL: str  # required; e.g. "gpt-4o-mini"
+    EMBEDDING_PROVIDER: str  = 'huggingface' #; "openai" | "huggingface"
+    EMBEDDING_MODEL: str = 'all-MiniLM-L6-v2' # e.g. "text-embedding-3-small"
 
     # --- Optional fields with defaults ---
     API_KEY: str = ""  # empty string disables auth check
