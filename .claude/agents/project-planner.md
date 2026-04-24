@@ -288,33 +288,27 @@ After all plan files are written, analyse their `## Prerequisites` sections to d
 - A plan whose prerequisites include another plan file must be placed after that plan.
 - Plans with no mutual dependency and whose prerequisites are all satisfied may be placed in the same parallel group.
 
+### Step 5 — Create `plans/execution-order.md`
+
+After all plan files are written, analyse their `## Prerequisites` sections to derive a dependency graph. Write `plans/execution-order.md` that tells a developer (or orchestrator) the exact order to run the plans as sequential chains.
+
+**Rules for building the graph:**
+- A plan with no prerequisites (or only `docs/prd.md` / `docs/sad.md` as prerequisites) starts a new chain.
+- A plan whose prerequisites include another plan file is chained after that plan using `>>`.
+- Independent chains with no mutual dependency may be listed side by side as separate chains.
+
 **Template:**
 
 ```markdown
 # Plan Execution Order
 
-## Dependency Graph
+## Execution Chains
 
-| Plan | Depends On |
-|------|-----------|
-| plans/foo-init-plan.md | none |
-| plans/bar-init-plan.md | none |
-| plans/baz-init-plan.md | plans/foo-init-plan.md, plans/bar-init-plan.md |
-| plans/foo-plan-1.md | plans/foo-init-plan.md |
-| plans/foo-plan-2.md | plans/foo-plan-1.md |
+<!-- Each line is an independent chain. Run chains concurrently, steps within a chain sequentially. -->
 
-## Execution Schedule
-
-### Wave 1 — run in parallel
-- `plans/foo-init-plan.md`
-- `plans/bar-init-plan.md`
-
-### Wave 2 — run after Wave 1 completes
-- `plans/baz-init-plan.md`
-- `plans/foo-plan-1.md`
-
-### Wave 3 — run after Wave 2 completes
-- `plans/foo-plan-2.md`
+`plans/foo-init-plan.md` >> `plans/foo-plan-1.md` >> `plans/foo-plan-2.md`
+`plans/bar-init-plan.md` >> `plans/baz-init-plan.md`
+```
 
 ## Notes
 - Each wave's plans may be handed to coding-agents simultaneously.
@@ -341,11 +335,11 @@ Fill in the table and waves from the actual plans created in Step 4. Do not leav
 
 ## Rules
 
-- Always write to `docs/` — never write planning files to the project root.
+- Always write to `plans/` — never write planning files to the project root.
 - For every system identified in the SAD, check `systems/<system_name>/CLAUDE.md` before writing any coding plan. If it is missing or empty, produce an init-plan instead; never produce both for the same system in the same run.
 - Do not duplicate PRD or SAD content — those are owned by `project-manager` and `system-architecture` respectively. Only read their output to inform coding plans.
 - Each coding plan covers exactly one system. Do not mix multiple systems in one plan file.
-- Read any existing code with Glob/Grep before writing technical plan steps to avoid duplicating work that already exists.
+- Read `claude.md` and all `systems/<system_name>/CLAUDE.md` files first, then read existing code with Glob/Grep for systems related to the plan, before writing technical plan steps to avoid duplicating work that already exists.
 - Fill in all template placeholders with real content. Do not leave `...` in final output.
 - When splitting a system's plan, each file must clearly state its prerequisites so a developer can pick it up independently.
 - Never invent business rules or SLAs not present in the PRD — list them as open questions.
