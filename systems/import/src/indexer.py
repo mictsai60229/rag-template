@@ -37,40 +37,11 @@ class Indexer:
         self,
         provider: OpenSearchProvider,
         settings: object,
-        mapping_path: str,
+        index_name: str
     ) -> None:
         self._provider = provider
         self._settings = settings
-        self._mapping_path = mapping_path
-
-    # ------------------------------------------------------------------
-    # Mapping
-    # ------------------------------------------------------------------
-
-    def _load_mapping(self) -> dict[str, Any]:
-        """Read and patch the index mapping.
-
-        Replaces the ``embedding.dimension`` value with
-        ``settings.embedding_dimension`` and strips the ``_comment_dimension``
-        key so it is not sent to OpenSearch.
-
-        Returns:
-            The patched mapping dict.
-        """
-        with open(self._mapping_path, encoding="utf-8") as fh:
-            mapping: dict[str, Any] = json.load(fh)
-
-        # Strip the comment key — OpenSearch rejects unknown mapping fields.
-        properties: dict[str, Any] = mapping.get("mappings", {}).get("properties", {})
-        properties.pop("_comment_dimension", None)
-
-        # Patch in the configured embedding dimension.
-        dimension = getattr(self._settings, "embedding_dimension", 1536)
-        embedding_field = properties.get("embedding", {})
-        embedding_field["dimension"] = dimension
-        properties["embedding"] = embedding_field
-
-        return mapping
+        self.index_name = index_name
 
     # ------------------------------------------------------------------
     # Index lifecycle
@@ -81,12 +52,11 @@ class Indexer:
 
         Logs the outcome at INFO level in both cases.
         """
-        index_name = self._provider._index  # noqa: SLF001 — needed for log message
         if not self._provider.index_exists():
-            self._provider.create_index(self._load_mapping())
-            logger.info("Created index '%s'", index_name)
+            self._provider.create_index(self.index_name)
+            logger.info("Created index '%s'", self.index_name)
         else:
-            logger.info("Index '%s' already exists, skipping creation", index_name)
+            logger.info("Index '%s' already exists, skipping creation", self.index_name)
 
     # ------------------------------------------------------------------
     # Validation

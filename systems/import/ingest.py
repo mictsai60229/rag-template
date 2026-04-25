@@ -70,7 +70,6 @@ def configure_logging(settings: Settings) -> None:
     root_logger.addHandler(handler)
     root_logger.setLevel(log_level)
 
-
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
@@ -82,15 +81,17 @@ def main() -> None:
     cleaner = TextCleaner()
     chunker = Chunker(settings)
     embedder = get_embedder(settings)
-    provider = OpenSearchProvider(
+    opensearch_provider = OpenSearchProvider(
         host=settings.opensearch_host,
         port=settings.opensearch_port,
         index=settings.opensearch_index,
         username=settings.opensearch_username,
         password=settings.opensearch_password,
     )
-    mapping_path = Path(__file__).parent.parent / "opensearch" / "mappings" / "rag_index.json"
-    indexer = Indexer(provider, settings, str(mapping_path))
+    # mapping_path = Path(__file__).parent.parent / "opensearch" / "mappings" / "rag_index.json"
+    indexer = Indexer(opensearch_provider, settings, index_name=settings.opensearch_index)
+
+    indexer.ensure_index()
 
     logger.info("Loading documents from %s", args.source)
     raw_docs = loader.load(args.source)
@@ -107,7 +108,6 @@ def main() -> None:
     embeddings = embedder.embed_batch(texts)
     logger.info("Embedded %d chunks", len(embeddings))
 
-    indexer.ensure_index()
     n_indexed = indexer.index_chunks(all_chunks, embeddings)
     logger.info("Ingestion complete: %d chunks indexed", n_indexed)
 
