@@ -59,28 +59,25 @@ class TestQueryResponse:
 
     def test_valid_construction(self) -> None:
         resp = QueryResponse(
-            answer="The answer is 42.",
             sources=[self._make_source()],
             retrieval_mode="vector",
             latency_ms=120,
         )
-        assert resp.answer == "The answer is 42."
         assert len(resp.sources) == 1
         assert resp.retrieval_mode == "vector"
         assert resp.latency_ms == 120
 
     def test_is_frozen(self) -> None:
         resp = QueryResponse(
-            answer="A",
             sources=[],
             retrieval_mode="hybrid",
             latency_ms=50,
         )
         with pytest.raises(Exception):
-            resp.answer = "B"  # type: ignore[misc]
+            resp.retrieval_mode = "changed"  # type: ignore[misc]
 
     def test_empty_sources_allowed(self) -> None:
-        resp = QueryResponse(answer="No context.", sources=[], retrieval_mode="keyword", latency_ms=10)
+        resp = QueryResponse(sources=[], retrieval_mode="keyword", latency_ms=10)
         assert resp.sources == []
 
 

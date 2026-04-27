@@ -12,7 +12,7 @@
         },
         "embedding": {
             "type": "knn_vector",
-            "dimension": 1536,
+            "dimension": 384,
             "method": {
                 "name": "hnsw",
                 "space_type": "cosinesimil",

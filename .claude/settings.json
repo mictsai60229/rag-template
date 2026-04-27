@@ -6,7 +6,8 @@
       "Bash(gh *)",
       "Skill(update-config)",
       "Skill(update-config:*)",
-      "Bash(echo \"Exit code: $?\")"
+      "Bash(echo \"Exit code: $?\")",
+      "Bash(docker compose *)"
     ]
   }
 }

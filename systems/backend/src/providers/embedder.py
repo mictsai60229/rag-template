@@ -142,4 +142,4 @@ class HFEmbedder(Embedder):
             List of embedding vectors.
         """
         vectors = self._model.encode(texts, convert_to_numpy=False)
-        return [list(v) for v in vectors]
+        return [v.tolist() for v in vectors]

@@ -13,6 +13,7 @@ dependencies = [
     "pydantic-settings>=2.3.0",
     "opensearch-py>=2.6.0",
     "openai>=1.35.0",
+    "sentence-transformers>=3.0.0",
     "langchain-core>=0.2.0",
     "python-json-logger>=2.0.7",
 ]
@@ -48,3 +49,8 @@ select = ["E", "F", "I", "N", "W"]
 [tool.mypy]
 strict = true
 python_version = "3.11"
+
+[dependency-groups]
+dev = [
+    "vulture>=2.16",
+]

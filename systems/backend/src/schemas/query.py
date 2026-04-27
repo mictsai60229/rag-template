@@ -10,6 +10,8 @@ from pydantic import BaseModel, ConfigDict, Field
 class SourceRef(BaseModel):
     """A single retrieved chunk cited in a ``QueryResponse``."""
 
+    model_config = ConfigDict(frozen=True)
+
     chunk_id: str = Field(..., description="Identifier of the retrieved chunk.")
     content: str = Field(..., description="Chunk text content (for citation display).")
     source: str = Field(..., description="Origin file path or URL of the chunk.")
@@ -37,6 +39,8 @@ class QueryRequest(BaseModel):
 
 class QueryResponse(BaseModel):
     """Response body for ``POST /query``."""
+
+    model_config = ConfigDict(frozen=True)
 
     sources: list[SourceRef] = Field(
         ..., description="Ordered list of retrieved chunks used as context."

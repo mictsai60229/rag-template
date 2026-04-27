@@ -2,10 +2,10 @@ services:
   opensearch:
     image: opensearchproject/opensearch:2.13.0
     environment:
-      - discovery.type=single-node
-      - plugins.security.disabled=true
-      - plugins.knn.enabled=true
-      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+      discovery.type: single-node
+      plugins.security.disabled: "true"
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx512m
     ports:
       - "127.0.0.1:9200:9200"
     volumes:
@@ -38,6 +38,9 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+    volumes:
+      - ./tests/source:/data:ro
+    command: ["--source", "/data"]
     depends_on:
       opensearch:
         condition: service_healthy

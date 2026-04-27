@@ -5,7 +5,7 @@ The ``get_config`` dependency is also mocked since ``require_api_key`` depends
 on it, and we want auth bypassed in tests (ENV=dev).
 """
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -20,23 +20,20 @@ from src.schemas.query import QueryResponse, SourceRef
 def _make_dev_config() -> Config:
     """Build a ``Config`` in dev mode so auth is bypassed."""
     return Config.model_construct(  # type: ignore[arg-type]
-        OPENAI_API_KEY="sk-test",
         OPENSEARCH_HOST="localhost",
         OPENSEARCH_PORT=9200,
         OPENSEARCH_INDEX="rag-index",
         EMBEDDING_PROVIDER="openai",
         EMBEDDING_MODEL="text-embedding-3-small",
-        LLM_MODEL="gpt-4o-mini",
         API_KEY="",
         ENV="dev",
     )
 
 
-def _make_mock_service(answer: str = "Test answer.") -> MagicMock:
+def _make_mock_service() -> MagicMock:
     """Return a mock ``QueryService`` whose ``query()`` returns a fixed response."""
     mock_service = MagicMock()
-    mock_service.query.return_value = QueryResponse(
-        answer=answer,
+    mock_service.query = AsyncMock(return_value=QueryResponse(
         sources=[
             SourceRef(
                 chunk_id="chunk-1",
@@ -47,7 +44,7 @@ def _make_mock_service(answer: str = "Test answer.") -> MagicMock:
         ],
         retrieval_mode="hybrid",
         latency_ms=42,
-    )
+    ))
     return mock_service
 
 
@@ -90,7 +87,6 @@ async def test_query_response_schema(mock_query_service: MagicMock) -> None:
             response = await client.post("/query", json={"query": "What is Python?"})
 
         body = response.json()
-        assert "answer" in body
         assert "sources" in body
         assert "retrieval_mode" in body
         assert "latency_ms" in body
@@ -144,8 +140,8 @@ async def test_query_missing_body_returns_422(mock_query_service: MagicMock) -> 
 
 
 @pytest.mark.asyncio
-async def test_query_response_answer_matches_service(mock_query_service: MagicMock) -> None:
-    """Route returns the answer exactly as returned by the service."""
+async def test_query_response_sources_non_empty(mock_query_service: MagicMock) -> None:
+    """Route returns the sources list as returned by the service."""
     app.dependency_overrides[get_query_service] = lambda: mock_query_service
     try:
         async with AsyncClient(
@@ -153,6 +149,6 @@ async def test_query_response_answer_matches_service(mock_query_service: MagicMo
         ) as client:
             response = await client.post("/query", json={"query": "What is Python?"})
 
-        assert response.json()["answer"] == "Test answer."
+        assert len(response.json()["sources"]) == 1
     finally:
         app.dependency_overrides.pop(get_query_service, None)

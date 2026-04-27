@@ -5,8 +5,6 @@ The route handler is intentionally thin: it parses the request schema, calls
 schema. No business logic lives here.
 """
 
-import asyncio
-
 from fastapi import APIRouter, Depends
 
 from src.dependencies.query import get_query_service

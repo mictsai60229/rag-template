@@ -9,9 +9,10 @@ COPY pyproject.toml ./
 # Install runtime dependencies only (no dev extras in the image)
 RUN pip install --no-cache-dir -e .
 
-# Copy the source package and CLI entry point
+# Copy the source package, CLI entry point, and index mapping files
 COPY src/ ./src/
 COPY ingest.py ./
+COPY storage/ ./storage/
 
 # Run as a non-root user for security
 RUN adduser --disabled-password --gecos "" importer && chown -R importer /app

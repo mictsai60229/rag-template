@@ -11,12 +11,8 @@ Responsibilities:
 
 import logging
 from typing import Any
-import os
-import json
 
 logger = logging.getLogger(__name__)
-CUR_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIRECTORY = os.path.abspath(os.path.join(CUR_DIRECTORY, '../..'))
 
 class OpenSearchProvider:
     """Wraps the opensearch-py client and exposes a clean interface for the Import pipeline.
@@ -59,15 +55,17 @@ class OpenSearchProvider:
         except Exception as exc:
             self._reraise(exc)
 
-    def create_index(self, index_name: str) -> None:
-        """Create the index with the given *mapping*.
+    def create_index(self, index_body: dict[str, Any]) -> None:
+        """Create the index using the given *mapping* dict.
+
+        Args:
+            mapping: Full index body (settings + mappings) to pass to OpenSearch.
 
         Raises:
             RuntimeError: If OpenSearch does not acknowledge the creation.
         """
         try:
-            body = self._get_index_body(index_name)
-            response = self._client.indices.create(index=self._index, body=body)
+            response = self._client.indices.create(index=self._index, body=index_body)
         except Exception as exc:
             self._reraise(exc)
 
@@ -76,25 +74,6 @@ class OpenSearchProvider:
                 f"Index creation not acknowledged by OpenSearch. Response: {response}"
             )
         logger.info("Created index '%s'", self._index)
-
-    def _get_index_body(self, index_name) -> dict[str, Any]:
-
-        index_directory = os.path.join(ROOT_DIRECTORY, f'storage/opensearch/{index_name}')
-
-        mapping_path = os.path.join(index_directory, 'mappings.json')
-        settings_path = os.path.join(index_directory, 'settings.json')
-
-        with open(mapping_path) as f:
-            mapping: dict = json.load(f)
-
-        with open(settings_path) as f:
-            settings: dict = json.load(f)
-        
-
-        return {
-            'mappings': mapping,
-            'settings': settings,
-        }
 
     def delete_index(self) -> None:
         """Delete the index.

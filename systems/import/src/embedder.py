@@ -106,8 +106,7 @@ class HFEmbedder(Embedder):
     def embed_batch(self, texts: list[str]) -> list[list[float]]:
         """Embed a list of texts and return a list of float vectors."""
         vectors = self._model.encode(texts, convert_to_numpy=False)
-        # ``encode`` returns a list of tensors or lists; normalise to list[list[float]].
-        return [list(v) for v in vectors]
+        return [v.tolist() for v in vectors]
 
 
 def get_embedder(settings: object) -> Embedder:

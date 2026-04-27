@@ -10,6 +10,7 @@ writes the resulting ChunkDocument records to OpenSearch.
 
 import argparse
 import logging
+import os
 from src.chunker import Chunker
 from src.cleaner import TextCleaner
 from src.config import Settings, get_settings
@@ -87,7 +88,9 @@ def main() -> None:
         password=settings.opensearch_password,
     )
     
-    indexer = Indexer(opensearch_provider, settings, index_name=settings.opensearch_index)
+    _cur = os.path.dirname(os.path.abspath(__file__))
+    
+    indexer = Indexer(opensearch_provider, settings)
 
     indexer.ensure_index()
 

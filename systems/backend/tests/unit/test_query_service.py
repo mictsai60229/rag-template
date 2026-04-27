@@ -48,12 +48,11 @@ def _make_chunk(
 
 def _make_service(
     chunks: list[Chunk] | None = None,
-    answer: str = "The answer.",
     config: MagicMock | None = None,
-) -> "tuple[QueryService, MagicMock, MagicMock, MagicMock]":
+) -> "tuple[QueryService, MagicMock, MagicMock]":
     """Create a QueryService with all mocked dependencies.
 
-    Returns: (service, mock_embedder, mock_opensearch, mock_llm)
+    Returns: (service, mock_embedder, mock_opensearch)
     """
     if chunks is None:
         chunks = [_make_chunk()]
@@ -66,16 +65,12 @@ def _make_service(
     mock_opensearch = MagicMock()
     mock_opensearch.search.return_value = chunks
 
-    mock_llm = MagicMock()
-    mock_llm.generate.return_value = answer
-
     service = QueryService(
         embedder=mock_embedder,
         opensearch=mock_opensearch,
-        llm=mock_llm,
         config=config,
     )
-    return service, mock_embedder, mock_opensearch, mock_llm
+    return service, mock_embedder, mock_opensearch
 
 
 # ---------------------------------------------------------------------------
@@ -84,9 +79,10 @@ def _make_service(
 
 
 class TestQueryServiceOrchestration:
-    def test_calls_embed_then_search_then_generate_in_order(self) -> None:
-        """query() calls embed → search → generate exactly once, in order."""
-        service, mock_embedder, mock_opensearch, mock_llm = _make_service()
+    @pytest.mark.asyncio
+    async def test_calls_embed_then_search_in_order(self) -> None:
+        """query() calls embed → search exactly once, in order."""
+        service, mock_embedder, mock_opensearch = _make_service()
         request = QueryRequest(query="What is Python?")
         call_order: list[str] = []
 
@@ -96,27 +92,26 @@ class TestQueryServiceOrchestration:
         mock_opensearch.search.side_effect = lambda **_kw: (
             call_order.append("search") or [_make_chunk()]
         )
-        mock_llm.generate.side_effect = lambda **_kw: (
-            call_order.append("generate") or "The answer."
-        )
 
-        service.query(request)
+        await service.query(request)
 
-        assert call_order == ["embed", "search", "generate"]
+        assert call_order == ["embed", "search"]
 
-    def test_embed_text_called_with_query_string(self) -> None:
-        service, mock_embedder, _, _ = _make_service()
+    @pytest.mark.asyncio
+    async def test_embed_text_called_with_query_string(self) -> None:
+        service, mock_embedder, _ = _make_service()
         request = QueryRequest(query="What is Python?")
 
-        service.query(request)
+        await service.query(request)
 
         mock_embedder.embed_text.assert_called_once_with("What is Python?")
 
-    def test_opensearch_search_called_with_correct_args(self) -> None:
-        service, _, mock_opensearch, _ = _make_service()
+    @pytest.mark.asyncio
+    async def test_opensearch_search_called_with_correct_args(self) -> None:
+        service, _, mock_opensearch = _make_service()
         request = QueryRequest(query="query text", retrieval_mode="vector", top_k=3)
 
-        service.query(request)
+        await service.query(request)
 
         mock_opensearch.search.assert_called_once_with(
             query_vector=[0.1, 0.2, 0.3],
@@ -126,85 +121,78 @@ class TestQueryServiceOrchestration:
             k=3,
         )
 
-    def test_llm_generate_called_with_query_and_chunks(self) -> None:
-        chunks = [_make_chunk("c1"), _make_chunk("c2")]
-        service, _, _, mock_llm = _make_service(chunks=chunks)
-        request = QueryRequest(query="What is Python?")
-
-        service.query(request)
-
-        mock_llm.generate.assert_called_once_with(query="What is Python?", chunks=chunks)
-
 
 class TestRetrievalModeAndTopKFallback:
-    def test_retrieval_mode_falls_back_to_config_when_request_is_none(self) -> None:
+    @pytest.mark.asyncio
+    async def test_retrieval_mode_falls_back_to_config_when_request_is_none(self) -> None:
         """When request.retrieval_mode is None, config.RETRIEVAL_MODE is used."""
         config = _make_config(retrieval_mode="keyword")
-        service, _, mock_opensearch, _ = _make_service(config=config)
+        service, _, mock_opensearch = _make_service(config=config)
         request = QueryRequest(query="query")  # retrieval_mode defaults to None
 
-        service.query(request)
+        await service.query(request)
 
         call_kwargs = mock_opensearch.search.call_args.kwargs
         assert call_kwargs["mode"] == "keyword"
 
-    def test_retrieval_mode_request_overrides_config(self) -> None:
+    @pytest.mark.asyncio
+    async def test_retrieval_mode_request_overrides_config(self) -> None:
         """When request.retrieval_mode is set, it overrides config."""
         config = _make_config(retrieval_mode="keyword")
-        service, _, mock_opensearch, _ = _make_service(config=config)
+        service, _, mock_opensearch = _make_service(config=config)
         request = QueryRequest(query="query", retrieval_mode="vector")
 
-        service.query(request)
+        await service.query(request)
 
         call_kwargs = mock_opensearch.search.call_args.kwargs
         assert call_kwargs["mode"] == "vector"
 
-    def test_top_k_falls_back_to_config_when_request_is_none(self) -> None:
+    @pytest.mark.asyncio
+    async def test_top_k_falls_back_to_config_when_request_is_none(self) -> None:
         """When request.top_k is None, config.TOP_K is used."""
         config = _make_config(top_k=7)
-        service, _, mock_opensearch, _ = _make_service(config=config)
+        service, _, mock_opensearch = _make_service(config=config)
         request = QueryRequest(query="query")  # top_k defaults to None
 
-        service.query(request)
+        await service.query(request)
 
         call_kwargs = mock_opensearch.search.call_args.kwargs
         assert call_kwargs["k"] == 7
 
-    def test_top_k_request_overrides_config(self) -> None:
+    @pytest.mark.asyncio
+    async def test_top_k_request_overrides_config(self) -> None:
         """When request.top_k is set, it overrides config."""
         config = _make_config(top_k=7)
-        service, _, mock_opensearch, _ = _make_service(config=config)
+        service, _, mock_opensearch = _make_service(config=config)
         request = QueryRequest(query="query", top_k=3)
 
-        service.query(request)
+        await service.query(request)
 
         call_kwargs = mock_opensearch.search.call_args.kwargs
         assert call_kwargs["k"] == 3
 
 
 class TestQueryResponseShape:
-    def test_response_answer_matches_llm_output(self) -> None:
-        service, _, _, _ = _make_service(answer="Python is awesome.")
-        response = service.query(QueryRequest(query="What is Python?"))
-        assert response.answer == "Python is awesome."
-
-    def test_response_retrieval_mode_set_correctly(self) -> None:
+    @pytest.mark.asyncio
+    async def test_response_retrieval_mode_set_correctly(self) -> None:
         config = _make_config(retrieval_mode="vector")
-        service, _, _, _ = _make_service(config=config)
-        response = service.query(QueryRequest(query="q"))
+        service, _, _ = _make_service(config=config)
+        response = await service.query(QueryRequest(query="q"))
         assert response.retrieval_mode == "vector"
 
-    def test_latency_ms_is_non_negative_integer(self) -> None:
-        service, _, _, _ = _make_service()
-        response = service.query(QueryRequest(query="q"))
+    @pytest.mark.asyncio
+    async def test_latency_ms_is_non_negative_integer(self) -> None:
+        service, _, _ = _make_service()
+        response = await service.query(QueryRequest(query="q"))
         assert isinstance(response.latency_ms, int)
         assert response.latency_ms >= 0
 
-    def test_sources_list_maps_chunk_fields_correctly(self) -> None:
+    @pytest.mark.asyncio
+    async def test_sources_list_maps_chunk_fields_correctly(self) -> None:
         chunk = _make_chunk(chunk_id="abc", content="text", source="file.pdf", score=0.75)
-        service, _, _, _ = _make_service(chunks=[chunk])
+        service, _, _ = _make_service(chunks=[chunk])
 
-        response = service.query(QueryRequest(query="q"))
+        response = await service.query(QueryRequest(query="q"))
 
         assert len(response.sources) == 1
         src = response.sources[0]
@@ -213,9 +201,10 @@ class TestQueryResponseShape:
         assert src.source == "file.pdf"
         assert src.score == 0.75
 
-    def test_sources_empty_when_no_chunks_returned(self) -> None:
-        service, _, _, _ = _make_service(chunks=[])
-        response = service.query(QueryRequest(query="q"))
+    @pytest.mark.asyncio
+    async def test_sources_empty_when_no_chunks_returned(self) -> None:
+        service, _, _ = _make_service(chunks=[])
+        response = await service.query(QueryRequest(query="q"))
         assert response.sources == []
 
     def test_no_fastapi_imports_in_service(self) -> None:

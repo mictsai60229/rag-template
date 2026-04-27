@@ -13,6 +13,7 @@ import json
 import logging
 from datetime import datetime, timezone
 from typing import Any
+from pathlib import Path
 
 from src.models import Chunk
 from src.providers.opensearch_provider import OpenSearchProvider
@@ -30,18 +31,38 @@ class Indexer:
         provider:     An :class:`OpenSearchProvider` instance.
         settings:     A :class:`~src.config.Settings` instance; the
                       ``embedding_dimension`` field is used to patch the mapping.
-        mapping_path: Absolute path to ``rag_index.json``.
     """
 
     def __init__(
         self,
         provider: OpenSearchProvider,
         settings: object,
-        index_name: str
     ) -> None:
         self._provider = provider
         self._settings = settings
-        self.index_name = index_name
+        self._index = settings.opensearch_index
+
+    def _load_index_body(self) -> dict[str, Any]:
+        """Load the index mapping from disk, strip comment keys, and patch the embedding dimension."""
+        base_path = Path(__file__).resolve().parent.parent.parent / "storage" / "opensearch" / self._index
+        mappings_path = base_path / "mappings.json"
+        settings_path = base_path / "settings.json"
+
+        with open(mappings_path) as fh:
+            mappings: dict[str, Any] = json.load(fh)
+
+        with open(settings_path) as fh:
+            settings : dict[str, Any] = json.load(fh)
+
+        props: dict[str, Any] = mappings.get("properties", {})
+        if "embedding" in props:
+            props["embedding"]["dimension"] = getattr(self._settings, "embedding_dimension", 1536)
+
+        index_body = {
+            "mappings": mappings,
+            "settings": settings,
+        }
+        return index_body
 
     # ------------------------------------------------------------------
     # Index lifecycle
@@ -53,10 +74,11 @@ class Indexer:
         Logs the outcome at INFO level in both cases.
         """
         if not self._provider.index_exists():
-            self._provider.create_index(self.index_name)
-            logger.info("Created index '%s'", self.index_name)
+            index_body = self._load_index_body()
+            self._provider.create_index(index_body)
+            logger.info("Created index")
         else:
-            logger.info("Index '%s' already exists, skipping creation", self.index_name)
+            logger.info("Index already exists, skipping creation")
 
     # ------------------------------------------------------------------
     # Validation
