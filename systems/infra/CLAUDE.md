@@ -20,10 +20,9 @@ All three services share a single Docker network (`rag-network`) so they can add
 └── systems/
     ├── backend/
     │   └── Dockerfile             # (owned by backend system)
-    ├── import/
-    │   └── Dockerfile             # (owned by import system)
-    └── opensearch/
-        └── docker-compose.yml     # (OpenSearch-only compose for isolated use)
+    └── import/
+        └── Dockerfile             # (owned by import system)
+
 systems/infra/
 └── CLAUDE.md
 ```
@@ -49,9 +48,6 @@ systems/infra/
 # Start the full stack locally (from project root)
 cp .env.example .env   # fill in real values
 docker compose up --build
-
-# Run only OpenSearch (for isolated backend/import dev)
-docker compose up opensearch
 
 # Run the import pipeline against the local stack
 docker compose run --rm importer python ingest.py --source ./sample_docs/

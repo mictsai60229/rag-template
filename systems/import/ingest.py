@@ -10,8 +10,6 @@ writes the resulting ChunkDocument records to OpenSearch.
 
 import argparse
 import logging
-from pathlib import Path
-
 from src.chunker import Chunker
 from src.cleaner import TextCleaner
 from src.config import Settings, get_settings
@@ -88,7 +86,7 @@ def main() -> None:
         username=settings.opensearch_username,
         password=settings.opensearch_password,
     )
-    # mapping_path = Path(__file__).parent.parent / "opensearch" / "mappings" / "rag_index.json"
+    
     indexer = Indexer(opensearch_provider, settings, index_name=settings.opensearch_index)
 
     indexer.ensure_index()

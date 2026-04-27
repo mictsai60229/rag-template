@@ -16,7 +16,7 @@ import json
 
 logger = logging.getLogger(__name__)
 CUR_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIRECTORY = os.path.join('../../', CUR_DIRECTORY)
+ROOT_DIRECTORY = os.path.abspath(os.path.join(CUR_DIRECTORY, '../..'))
 
 class OpenSearchProvider:
     """Wraps the opensearch-py client and exposes a clean interface for the Import pipeline.
@@ -92,7 +92,7 @@ class OpenSearchProvider:
         
 
         return {
-            'mapping': mapping,
+            'mappings': mapping,
             'settings': settings,
         }
 

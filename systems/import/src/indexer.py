@@ -1,9 +1,9 @@
 """Indexer for the RAG Data Import pipeline.
 
-Reads the reference mapping from ``systems/opensearch/mappings/rag_index.json``,
-patches in the configured embedding dimension, creates the OpenSearch index if it
-does not already exist, validates each chunk document size before submission, and
-bulk-writes :class:`~src.models.Chunk` objects via :class:`OpenSearchProvider`.
+Reads the reference mapping from ``systems/import/storage/opensearch/<index_name>/mappings.json``,
+creates the OpenSearch index if it does not already exist, validates each chunk
+document size before submission, and bulk-writes :class:`~src.models.Chunk` objects
+via :class:`OpenSearchProvider`.
 
 The only module that imports opensearch-py is
 :mod:`src.providers.opensearch_provider`.  This module never does so directly.

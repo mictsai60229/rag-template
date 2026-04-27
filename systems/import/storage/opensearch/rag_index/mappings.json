@@ -1,0 +1,42 @@
+{
+    "properties": {
+        "chunk_id": {
+            "type": "keyword"
+        },
+        "doc_id": {
+            "type": "keyword"
+        },
+        "content": {
+            "type": "text",
+            "analyzer": "standard"
+        },
+        "embedding": {
+            "type": "knn_vector",
+            "dimension": 1536,
+            "method": {
+                "name": "hnsw",
+                "space_type": "cosinesimil",
+                "engine": "nmslib",
+                "parameters": {
+                    "ef_construction": 128,
+                    "m": 16
+                }
+            }
+        },
+        "source": {
+            "type": "keyword"
+        },
+        "doc_type": {
+            "type": "keyword"
+        },
+        "page_number": {
+            "type": "integer"
+        },
+        "chunk_index": {
+            "type": "integer"
+        },
+        "ingested_at": {
+            "type": "date"
+        }
+    }
+}
